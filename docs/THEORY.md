@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, and source/sink policy provenance | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, and sanitizer-policy evidence tied to `SanitizerLattice` | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -660,6 +660,35 @@ This narrows the source/sink-classification gap:
 > source/sink policy rules.  Call-name extraction and production policy
 > compilation remain external obligations.
 
+`PcSastLean.CPGSanitizerPolicy` connects CPG sanitizer facts to the
+context-sensitive sanitizer lattice:
+
+- `CPGSanitizerPolicyRule`: sanitizer call-name rules and sink-class required
+  `SinkKind` rules.
+- `CPGSanitizerFactCert`: a certificate that a specific CPG node is a sanitizer
+  for one `SinkKind`.
+- `checkCPGSanitizerFactCert_sound`: accepted sanitizer fact certificates imply
+  trusted sanitizer-policy semantics.
+- `SinkPolicyRequires`: a sink policy class requires a specific `SinkKind`.
+- `SanitizerCoversFinding`: the sanitizer node appears on the finding path and
+  provides the required `SinkKind`.
+- `cpg_sanitizer_grants_required_protection`: bridge theorem to
+  `SecLabel.sanitize_safe_for`.
+- `CPGSanitizedTraversalCert`: policy-backed CPG finding plus sanitizer
+  evidence.
+- `CPGSanitizedTraversalMatch`: policy-backed traversal match plus sanitizer
+  evidence and sanitizer-lattice protection.
+- `checked_cpg_sanitized_traversal_sound`: accepted sanitizer-backed traversal
+  certificates imply `CPGSanitizedTraversalMatch`.
+- `checked_cpg_sanitized_finding_sound`: accepted sanitizer-backed traversal
+  certificates still imply ordinary `CPGFinding`.
+
+This narrows the sanitizer gap in CPG queries:
+
+> A sanitizer is not a global clean bit.  The sanitizer call-name policy must
+> provide the same `SinkKind` required by the sink class, and Lean checks that
+> this corresponds to a real protection in `SanitizerLattice`.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -1074,8 +1103,8 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Add sanitizer policy provenance for CPG node facts and connect it to
-   `SanitizerLattice`.
+6. Add ordered/value-carrying sanitizer path evidence for CPG, so the sanitizer
+   must occur before the sink and apply to the value that reaches it.
 7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
 8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
