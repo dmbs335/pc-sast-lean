@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, and sanitizer-backed proof-carrying triage | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, sanitizer-backed proof-carrying triage, and wrong-context sanitizer rejection | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -742,6 +742,30 @@ This closes the CI loop for the CPG sanitizer slice:
 > semantics is intentionally narrow; production use must prove that ordered
 > sanitizer evidence really rules out the concrete vulnerability.
 
+`PcSastLean.CPGSanitizerGuardrail` adds the negative theorem for sanitizer
+misuse:
+
+- `sanitizerCertKind`: projects the `SinkKind` claimed by a sanitizer
+  certificate.
+- `wrong_context_sanitizer_does_not_prove_safe`: a sanitizer for one
+  `SinkKind` does not prove safety for a different `SinkKind` in the lattice.
+- `checked_sanitizer_kind_matches_required`: any accepted sanitizer-backed CPG
+  traversal forces the sanitizer kind to equal the sink-required kind.
+- `wrong_context_sanitized_traversal_rejected`: a wrong-context sanitizer-backed
+  traversal cannot be accepted.
+- `checked_ordered_sanitizer_kind_matches_required`: the same kind equality is
+  forced for ordered value-flow sanitizer evidence.
+- `wrong_context_ordered_sanitizer_rejected`: a wrong-context ordered sanitizer
+  certificate cannot pass the checker and therefore cannot become triage
+  evidence.
+
+This is a guardrail, not a precision claim:
+
+> The checker does not merely accept "some sanitizer happened."  The sanitizer
+> capability must match the sink context exactly.  A SQL sanitizer cannot
+> suppress a shell sink unless the policy/extraction layer proves that the sink
+> itself requires SQL, not shell.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -1138,7 +1162,8 @@ trusted claim is:
 > trusted graph/path/fixpoint facts; abstract executions over-approximate
 > corresponding concrete toy executions; proof-carrying triage cannot hide a
 > concrete modeled bug; targeted structural evidence can suppress route-shadow
-> and pointer-disjoint false positives; and source-level CI claims require
+> and pointer-disjoint false positives; wrong-context sanitizer evidence is
+> rejected by the CPG triage checker; and source-level CI claims require
 > explicit extraction and provenance obligations.  The repository does not yet
 > verify extraction from a production language or prove general precision
 > improvements.
@@ -1156,23 +1181,21 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Add a wrong-context sanitizer guardrail for CPG triage, proving that a
-   sanitizer for one `SinkKind` cannot suppress a sink requiring another kind.
-7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
+6. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
-8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
+7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
-9. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
+8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
    only already-exploded `IFDSEdge`.
-10. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
+9. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
    finding certificates.
-11. Build real extractors that emit `SourceToIRSound` certificates for a target
+10. Build real extractors that emit `SourceToIRSound` certificates for a target
    language or framework.
-12. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
-13. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
-14. Split concrete execution from abstract execution so the analyzer can be less
+11. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
+12. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
+13. Split concrete execution from abstract execution so the analyzer can be less
    precise while remaining sound.
-15. Add sanitizer obligations as proof-producing predicates.
-16. Export a simple JSON certificate format from a toy scanner.
-17. Build a Lean-side parser/checker for that certificate format.
-18. Prove source-language extraction preserves the security-relevant semantics.
+14. Add sanitizer obligations as proof-producing predicates.
+15. Export a simple JSON certificate format from a toy scanner.
+16. Build a Lean-side parser/checker for that certificate format.
+17. Prove source-language extraction preserves the security-relevant semantics.

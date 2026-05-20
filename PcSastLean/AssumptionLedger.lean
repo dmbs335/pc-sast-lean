@@ -39,6 +39,7 @@ inductive ModeledSurface where
   | cpgSanitizerPolicy
   | cpgOrderedSanitizer
   | cpgSanitizerTriage
+  | cpgSanitizerGuardrail
   | ciTriage
 deriving DecidableEq, Repr
 
@@ -79,6 +80,7 @@ inductive ModuleName where
   | cpgSanitizerPolicy
   | cpgOrderedSanitizer
   | cpgSanitizerTriage
+  | cpgSanitizerGuardrail
   | cpgProvenance
   | smtCore
   | smtResolution
@@ -138,6 +140,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.cpgSanitizerPolicy
       , ModeledSurface.cpgOrderedSanitizer
       , ModeledSurface.cpgSanitizerTriage
+      , ModeledSurface.cpgSanitizerGuardrail
       , ModeledSurface.ciTriage
       ]
   , obligations :=
@@ -272,6 +275,19 @@ def moduleClaimLedger : List ModuleClaim :=
           ModeledSurface.cpgSanitizerPolicy, ModeledSurface.cpgOrderedSanitizer,
           ModeledSurface.cpgSanitizerTriage, ModeledSurface.sanitizerCapabilities,
           ModeledSurface.ciTriage]
+    , obligations :=
+        [ExternalObligation.cpgExtractionProvenance,
+          ExternalObligation.precisionEvaluation]
+    }
+  , { module := ModuleName.cpgSanitizerGuardrail
+    , status := ClaimStatus.conditional
+    , modeled :=
+        [ModeledSurface.cpgCertificates, ModeledSurface.cpgTraversalTemplates,
+          ModeledSurface.cpgNodePredicates, ModeledSurface.cpgPolicyProvenance,
+          ModeledSurface.cpgSanitizerPolicy, ModeledSurface.cpgOrderedSanitizer,
+          ModeledSurface.cpgSanitizerTriage,
+          ModeledSurface.cpgSanitizerGuardrail,
+          ModeledSurface.sanitizerCapabilities, ModeledSurface.ciTriage]
     , obligations :=
         [ExternalObligation.cpgExtractionProvenance,
           ExternalObligation.precisionEvaluation]
