@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths | Real AST/CFG/DDG/CDG extraction provenance is incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal-template certificates | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -578,6 +578,33 @@ This narrows the CPG gap:
 > component edges correctly reflect real source syntax, control flow, and
 > dependencies.
 
+`PcSastLean.CPGTraversal` adds a tiny vulnerability-template layer over CPG
+paths:
+
+- `CPGKindFilter`: edge-kind filters for wildcard, exact kind, and one-of-many
+  kind choices.
+- `cpgHopsMatchFilters`: semantic relation between a concrete hop list and a
+  filter sequence.
+- `checkCPGHopsMatchFilters_sound`: an accepted filter check implies the
+  semantic match relation.
+- `CPGTraversalQuery`: a source set, sink set, and edge-kind filter sequence.
+- `CPGTraversalMatch`: a query match is source/sink membership plus a real CPG
+  path satisfying the filters.
+- `checked_cpg_traversal_match_sound`: accepted traversal certificates imply
+  `CPGTraversalMatch`.
+- `checked_cpg_traversal_finding_sound`: accepted traversal certificates also
+  imply ordinary `CPGFinding`.
+- `checked_cpg_traversal_path_and_filters`: accepted traversal certificates
+  produce a `CPGPath` and a proof that the path's edge kinds satisfy the query
+  template.
+
+This covers the second half of the CPG idea in miniature:
+
+> Findings can now be checked as matches of a vulnerability traversal template,
+> not merely as arbitrary source-to-sink paths.  The template language is still
+> tiny: it has source/sink id sets and edge-kind filters, but no node-property
+> predicates, joins, repetition, negation, or graph database semantics.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -992,8 +1019,8 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Add a tiny CPG traversal/query-template language with edge-kind filters and
-   prove accepted traversal certificates correspond to CPG paths.
+6. Add CPG node-property predicates for call names, argument positions, source
+   classifications, and sink classifications.
 7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
 8. Refine pointer-disjoint suppression with byte ranges, object bounds, and

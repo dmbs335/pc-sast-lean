@@ -33,6 +33,7 @@ inductive ModeledSurface where
   | ifdsDistributiveFlows
   | cpgCertificates
   | cpgComponentMerge
+  | cpgTraversalTemplates
   | ciTriage
 deriving DecidableEq, Repr
 
@@ -67,6 +68,7 @@ inductive ModuleName where
   | ifdsSummary
   | cpg
   | cpgConstruction
+  | cpgTraversal
   | cpgProvenance
   | smtCore
   | smtResolution
@@ -120,6 +122,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.ifdsDistributiveFlows
       , ModeledSurface.cpgCertificates
       , ModeledSurface.cpgComponentMerge
+      , ModeledSurface.cpgTraversalTemplates
       , ModeledSurface.ciTriage
       ]
   , obligations :=
@@ -208,6 +211,11 @@ def moduleClaimLedger : List ModuleClaim :=
   , { module := ModuleName.cpgConstruction
     , status := ClaimStatus.conditional
     , modeled := [ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge]
+    , obligations := [ExternalObligation.cpgExtractionProvenance]
+    }
+  , { module := ModuleName.cpgTraversal
+    , status := ClaimStatus.conditional
+    , modeled := [ModeledSurface.cpgCertificates, ModeledSurface.cpgTraversalTemplates]
     , obligations := [ExternalObligation.cpgExtractionProvenance]
     }
   , { module := ModuleName.cpgProvenance
