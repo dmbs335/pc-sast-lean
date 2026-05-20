@@ -13,6 +13,7 @@ import PcSastLean.MiniSourceExtraction
 import PcSastLean.IFDS
 import PcSastLean.IFDSFixpoint
 import PcSastLean.IFDSSummary
+import PcSastLean.IFDSDistributive
 import PcSastLean.CPG
 import PcSastLean.IFDSCPGEmbedding
 import PcSastLean.CPGProvenance

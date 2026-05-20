@@ -30,6 +30,7 @@ inductive ModeledSurface where
   | routeShadowSuppression
   | pointerDisjointSuppression
   | ifdsCertificates
+  | ifdsDistributiveFlows
   | cpgCertificates
   | ciTriage
 deriving DecidableEq, Repr
@@ -61,6 +62,7 @@ inductive ModuleName where
   | miniSourceCallback
   | richSourceProvenance
   | ifds
+  | ifdsDistributive
   | ifdsSummary
   | cpg
   | cpgProvenance
@@ -113,6 +115,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.pointerDisjointSuppression
       , ModeledSurface.sanitizerCapabilities
       , ModeledSurface.ifdsCertificates
+      , ModeledSurface.ifdsDistributiveFlows
       , ModeledSurface.cpgCertificates
       , ModeledSurface.ciTriage
       ]
@@ -183,6 +186,11 @@ def moduleClaimLedger : List ModuleClaim :=
     , status := ClaimStatus.verified
     , modeled := [ModeledSurface.ifdsCertificates]
     , obligations := []
+    }
+  , { module := ModuleName.ifdsDistributive
+    , status := ClaimStatus.conditional
+    , modeled := [ModeledSurface.ifdsCertificates, ModeledSurface.ifdsDistributiveFlows]
+    , obligations := [ExternalObligation.realLanguageExtraction]
     }
   , { module := ModuleName.ifdsSummary
     , status := ClaimStatus.verified

@@ -40,7 +40,7 @@ Claim boundary:
 | Mini source callbacks | Verified | Optional concrete callback execution is covered by abstract execution that includes the callback path | Event-loop ordering, async/await, promise chains, reentrancy |
 | Rich source provenance | Conditional | Source spans, AST node ids, generated-code origins, and mini extractor-generated provenance lists erase safely to source-backed adapter proofs | Correct real source maps, parser spans, macro/template expansion provenance |
 | Offset pointer arithmetic | Conditional toy model | Base+offset pointer add/read/write preserve may-alias soundness | C/C++ pointer provenance, byte layout, UB, unsafe casts, negative offsets |
-| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts | That a real extractor built the graph correctly |
+| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts; sparse IFDS fact-flow relations lower to exploded graph paths | That a real extractor built the graph correctly |
 | CI no-bug-hiding | Conditional | Sound analyzer run plus complete proof-carrying triage cannot hide modeled bugs | Source-level safety without extraction/provenance |
 | Production source extraction | External obligation | Transfer theorems once `SourceToIRSound` is supplied | Full real-language semantics and parser/source-map correctness |
 | SMT feasibility | Conditional toy model | Boolean contradiction cores and propositional implication-chain resolution | LRA, EUF, strings, arrays, regex theory proofs |
@@ -97,6 +97,8 @@ Current verified slice:
   absent targets are not IFDS-reachable.
 - IFDS summary-edge/compressed finding certificates: accepted compressed paths
   expand to ordinary IFDS paths over the original graph.
+- IFDS finite-distributive flow bridge: sparse fact-flow relations distribute
+  over set-union membership and compile to ordinary exploded-supergraph paths.
 - CPG/CodeQL-style source-to-sink graph path certificates over typed AST/CFG/DDG
   style edges with source-location provenance.
 - IFDS-to-CPG embedding: accepted IFDS path certificates become accepted

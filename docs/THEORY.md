@@ -101,7 +101,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Heap/alias abstraction | Conditional | heap may-points-to soundness, allocation-site/object-sensitive projection | No pointer arithmetic, native objects, reflection, or real call-string-k model |
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
-| IFDS certificates | Verified | path, fixpoint, compressed summary cert soundness | Solver implementation is untrusted; certificates are checked |
+| IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
 | CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding | Real AST/CFG/DDG/CDG extraction provenance is incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
@@ -460,6 +460,31 @@ This matches real IFDS solver artifacts more closely:
 > A tabulation solver may emit summary segments instead of every raw edge.  Lean
 > accepts the compressed finding only if each summary can be expanded back to
 > checked IFDS hops and the whole expanded path has valid call/return discipline.
+
+`PcSastLean.IFDSDistributive` adds the missing bridge back toward the original
+Reps-Horwitz-Sagiv formulation:
+
+- `IFDSFactFlow`: a sparse finite relation from input facts to output facts.
+- `applyFactFlow`: the induced subset transformer over finite fact lists.
+- `applyFactFlow_sound` and `applyFactFlow_complete`: membership in the
+  transformer is exactly justified by relation edges whose source facts are in
+  the input set.
+- `applyFactFlow_append_distributes`: relational transfer distributes over
+  list-union membership, matching the IFDS finite-distributive-subset premise in
+  the union-confluence case.
+- `IFDSFlowEdge`: a program-point edge carrying a sparse fact-flow relation.
+- `explodeFlowEdge` and `explodeFlowGraph`: compile relation edges into ordinary
+  exploded-supergraph edges.
+- `flowHopsPath_to_IFDSPath` and `ifds_flow_path_cert_sound`: a valid relational
+  flow-path certificate implies ordinary `IFDSReachable` after explosion.
+
+This closes part of the earlier IFDS integration gap:
+
+> The checker no longer starts only after an exploded graph magically exists.
+> It now has a formal layer where finite distributive flow relations enter and
+> are lowered to exploded-supergraph reachability.  What remains external is
+> proving that real program statements emitted those relations, plus tabulation
+> algorithm correctness and complexity.
 
 `PcSastLean.CPG` adds a Code Property Graph / CodeQL / Joern style layer:
 
@@ -946,15 +971,17 @@ The current unverified gap is extraction from real languages into this IR.
    rules.
 7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
-8. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
+8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
+   only already-exploded `IFDSEdge`.
+9. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
    finding certificates.
-9. Build real extractors that emit `SourceToIRSound` certificates for a target
+10. Build real extractors that emit `SourceToIRSound` certificates for a target
    language or framework.
-10. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
-11. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
-12. Split concrete execution from abstract execution so the analyzer can be less
+11. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
+12. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
+13. Split concrete execution from abstract execution so the analyzer can be less
    precise while remaining sound.
-13. Add sanitizer obligations as proof-producing predicates.
-14. Export a simple JSON certificate format from a toy scanner.
-15. Build a Lean-side parser/checker for that certificate format.
-16. Prove source-language extraction preserves the security-relevant semantics.
+14. Add sanitizer obligations as proof-producing predicates.
+15. Export a simple JSON certificate format from a toy scanner.
+16. Build a Lean-side parser/checker for that certificate format.
+17. Prove source-language extraction preserves the security-relevant semantics.
