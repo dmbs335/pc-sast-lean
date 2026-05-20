@@ -20,6 +20,7 @@ import PcSastLean.CPGProvenance
 import PcSastLean.CPGConstruction
 import PcSastLean.CPGTraversal
 import PcSastLean.CPGNodePredicates
+import PcSastLean.CPGPolicyProvenance
 import PcSastLean.Feasibility
 import PcSastLean.SMTCore
 import PcSastLean.SMTResolution
