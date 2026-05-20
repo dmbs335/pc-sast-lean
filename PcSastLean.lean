@@ -26,6 +26,7 @@ import PcSastLean.CPGSanitizerPolicy
 import PcSastLean.CPGOrderedSanitizer
 import PcSastLean.CPGSanitizerTriage
 import PcSastLean.CPGSanitizerGuardrail
+import PcSastLean.CPGNoOrphanAdapter
 import PcSastLean.Feasibility
 import PcSastLean.SMTCore
 import PcSastLean.SMTResolution

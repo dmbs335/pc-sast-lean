@@ -41,7 +41,7 @@ Claim boundary:
 | Mini source callbacks | Verified | Optional concrete callback execution is covered by abstract execution that includes the callback path | Event-loop ordering, async/await, promise chains, reentrancy |
 | Rich source provenance | Conditional | Source spans, AST node ids, generated-code origins, and mini extractor-generated provenance lists erase safely to source-backed adapter proofs | Correct real source maps, parser spans, macro/template expansion provenance |
 | Offset pointer arithmetic | Conditional toy model | Base+offset pointer add/read/write preserve may-alias soundness | C/C++ pointer provenance, byte layout, UB, unsafe casts, negative offsets |
-| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts; sparse IFDS fact-flow relations lower to exploded graph paths; component CPG edges merge into typed CPG paths; CPG hops can require typed extraction-origin witnesses; CPG traversal templates check edge-kind, policy-backed node-property, sanitizer-policy, and ordered value-flow patterns; sanitizer evidence can feed proof-carrying triage; wrong-context sanitizer evidence is rejected | That a real extractor built the graph correctly |
+| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts; sparse IFDS fact-flow relations lower to exploded graph paths; component CPG edges merge into typed CPG paths; CPG hops can require typed extraction-origin witnesses before entering analyzer/triage adapters; CPG traversal templates check edge-kind, policy-backed node-property, sanitizer-policy, and ordered value-flow patterns; sanitizer evidence can feed proof-carrying triage; wrong-context sanitizer evidence is rejected | That a real extractor built the graph correctly |
 | CI no-bug-hiding | Conditional | Sound analyzer run plus complete proof-carrying triage cannot hide modeled bugs | Source-level safety without extraction/provenance |
 | Production source extraction | External obligation | Transfer theorems once `SourceToIRSound` is supplied | Full real-language semantics and parser/source-map correctness |
 | SMT feasibility | Conditional toy model | Boolean contradiction cores and propositional implication-chain resolution | LRA, EUF, strings, arrays, regex theory proofs |
@@ -123,6 +123,9 @@ Current verified slice:
 - CPG sanitizer guardrail: accepted CPG sanitizer evidence forces the sanitizer
   kind to match the sink-required kind, so a SQL sanitizer cannot suppress a
   shell sink in the modeled checker.
+- CPG no-orphan adapters: ordinary CPG finding runs and ordered sanitizer triage
+  runs can be lifted only after every finding-path hop has checked
+  extraction-origin provenance.
 - IFDS-to-CPG embedding: accepted IFDS path certificates become accepted
   CPG-style path certificates over an encoded exploded supergraph.
 - CPG edge provenance certificates, including path-specific typed provenance for

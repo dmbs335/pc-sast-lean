@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, checked extraction-origin witnesses for CPG hops, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, sanitizer-backed proof-carrying triage, and wrong-context sanitizer rejection | Real AST/CFG/DDG/CDG extraction algorithms and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, checked extraction-origin witnesses for CPG hops, no-orphan adapters for CPG analyzer/triage runs, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, sanitizer-backed proof-carrying triage, and wrong-context sanitizer rejection | Real AST/CFG/DDG/CDG extraction algorithms and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -795,6 +795,37 @@ This is a guardrail, not a precision claim:
 > suppress a shell sink unless the policy/extraction layer proves that the sink
 > itself requires SQL, not shell.
 
+`PcSastLean.CPGNoOrphanAdapter` moves extraction-origin coverage into the
+adapter boundary:
+
+- `CPGNoOrphanFindingCert`: ordinary CPG finding certificate plus extraction
+  certificates for its hops.
+- `checkCPGNoOrphanFinding`: accepts only when the CPG finding checker and
+  extraction-hop checker both accept.
+- `checked_cpg_no_orphan_finding_sound`: accepted no-orphan finding evidence
+  yields the CPG finding plus origin evidence for every hop.
+- `cpgNoOrphanFindingRun_sound`: the resulting analyzer run satisfies the CI
+  `AnalyzerRun.Sound` interface.
+- `cpgNoOrphanFindingRun_hops_have_origins`: every hop used by that analyzer
+  run has a typed extraction origin.
+- `CPGNoOrphanOrderedSanitizerCert`: ordered sanitizer evidence plus extraction
+  certificates for the underlying finding path.
+- `checkCPGNoOrphanOrderedSanitizer`: accepts only when ordered sanitizer
+  evidence and extraction-hop coverage both accept.
+- `checked_cpg_no_orphan_ordered_sanitizer_sound`: accepted evidence yields both
+  ordered sanitizer semantics and per-hop origin coverage.
+- `cpgNoOrphanOrderedSanitizerRun_sound`: the sanitizer-triage analyzer run
+  remains sound under the no-orphan adapter.
+- `noOrphanOrderedSanitizerTriageEvidence_sound`: sanitizer suppression evidence
+  still composes with proof-carrying triage, but only after the path's hops are
+  origin-backed.
+
+This pushes provenance into operational use:
+
+> It is no longer enough for CPG extraction-origin checking to exist as a side
+> theorem.  The adapter that feeds CI and sanitizer triage can require it, so a
+> top-level CPG run cannot depend on a finding path with an unbacked hop.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -1193,9 +1224,10 @@ trusted claim is:
 > concrete modeled bug; targeted structural evidence can suppress route-shadow
 > and pointer-disjoint false positives; wrong-context sanitizer evidence is
 > rejected by the CPG triage checker; checked CPG hops can require typed
-> extraction origins; and source-level CI claims require explicit extraction and
-> provenance obligations.  The repository does not yet verify extraction from a
-> production language or prove general precision improvements.
+> extraction origins before entering CPG analyzer/triage adapters; and
+> source-level CI claims require explicit extraction and provenance obligations.
+> The repository does not yet verify extraction from a production language or
+> prove general precision improvements.
 
 The current unverified gap is extraction from real languages into this IR.
 
@@ -1210,21 +1242,23 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Prove real AST/CFG/DDG/CDG extraction algorithms discharge the checked CPG
+6. Lift source-backed adapters through no-orphan CPG adapters so source-level
+   reports inherit per-hop extraction-origin coverage.
+7. Prove real AST/CFG/DDG/CDG extraction algorithms discharge the checked CPG
    extraction-origin certificates.
-7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
+8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
-8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
+9. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
    only already-exploded `IFDSEdge`.
-9. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
+10. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
    finding certificates.
-10. Build real extractors that emit `SourceToIRSound` certificates for a target
+11. Build real extractors that emit `SourceToIRSound` certificates for a target
    language or framework.
-11. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
-12. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
-13. Split concrete execution from abstract execution so the analyzer can be less
+12. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
+13. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
+14. Split concrete execution from abstract execution so the analyzer can be less
    precise while remaining sound.
-14. Add sanitizer obligations as proof-producing predicates.
-15. Export a simple JSON certificate format from a toy scanner.
-16. Build a Lean-side parser/checker for that certificate format.
-17. Prove source-language extraction preserves the security-relevant semantics.
+15. Add sanitizer obligations as proof-producing predicates.
+16. Export a simple JSON certificate format from a toy scanner.
+17. Build a Lean-side parser/checker for that certificate format.
+18. Prove source-language extraction preserves the security-relevant semantics.
