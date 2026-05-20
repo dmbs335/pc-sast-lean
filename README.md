@@ -132,6 +132,8 @@ Current verified slice:
 - multi-finding source-backed no-orphan CPG reports: aggregate source-level CPG
   reports preserve source/artifact provenance and hop-origin coverage for every
   checked entry.
+- source-backed no-orphan CPG CI gate: multi-finding source CPG reports compose
+  with `ci_gate_no_bug_hiding` while retaining per-entry hop-origin evidence.
 - IFDS-to-CPG embedding: accepted IFDS path certificates become accepted
   CPG-style path certificates over an encoded exploded supergraph.
 - CPG edge provenance certificates, including path-specific typed provenance for

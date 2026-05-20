@@ -22,6 +22,7 @@ inductive ModeledSurface where
   | richSourceProvenance
   | sourceBackedNoOrphanCPG
   | multiSourceBackedNoOrphanCPG
+  | sourceBackedNoOrphanCPGCI
   | branchJoin
   | procedureSummaries
   | heapMayAlias
@@ -75,6 +76,7 @@ inductive ModuleName where
   | richSourceProvenance
   | sourceBackedNoOrphanCPG
   | multiSourceBackedNoOrphanCPG
+  | sourceBackedNoOrphanCPGCI
   | ifds
   | ifdsDistributive
   | ifdsSummary
@@ -140,6 +142,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.sanitizerCapabilities
       , ModeledSurface.sourceBackedNoOrphanCPG
       , ModeledSurface.multiSourceBackedNoOrphanCPG
+      , ModeledSurface.sourceBackedNoOrphanCPGCI
       , ModeledSurface.ifdsCertificates
       , ModeledSurface.ifdsDistributiveFlows
       , ModeledSurface.cpgCertificates
@@ -239,6 +242,21 @@ def moduleClaimLedger : List ModuleClaim :=
           ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge,
           ModeledSurface.cpgExtractionProvenance,
           ModeledSurface.cpgNoOrphanAdapter]
+    , obligations :=
+        [ExternalObligation.realLanguageExtraction,
+          ExternalObligation.cpgExtractionProvenance]
+    }
+  , { module := ModuleName.sourceBackedNoOrphanCPGCI
+    , status := ClaimStatus.conditional
+    , modeled :=
+        [ModeledSurface.richSourceProvenance,
+          ModeledSurface.sourceBackedNoOrphanCPG,
+          ModeledSurface.multiSourceBackedNoOrphanCPG,
+          ModeledSurface.sourceBackedNoOrphanCPGCI,
+          ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge,
+          ModeledSurface.cpgExtractionProvenance,
+          ModeledSurface.cpgNoOrphanAdapter,
+          ModeledSurface.ciTriage]
     , obligations :=
         [ExternalObligation.realLanguageExtraction,
           ExternalObligation.cpgExtractionProvenance]
