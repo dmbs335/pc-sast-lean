@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, and ordered value-flow sanitizer evidence | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, and sanitizer-backed proof-carrying triage | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -717,6 +717,31 @@ This closes a weakness in the first sanitizer bridge:
 > must be the sink input token.  Correct computation of those flow tokens remains
 > an extraction/provenance obligation.
 
+`PcSastLean.CPGSanitizerTriage` packages ordered sanitizer evidence into the
+top-level proof-carrying triage interface:
+
+- `cpgUnsanitizedConcreteFinding`: a narrow modeled concrete semantics where a
+  CPG sink is concrete only when checked ordered sanitizer evidence is absent.
+- `checked_ordered_sanitizer_not_concrete`: accepted ordered sanitizer evidence
+  proves the sink is absent from that modeled concrete finding list.
+- `orderedSanitizerTriageEvidence`: converts ordered sanitizer evidence into
+  `TriageEvidence`.
+- `orderedSanitizerTriageEvidence_sound`: sanitizer evidence is sound for the
+  modeled concrete CPG semantics.
+- `orderedSanitizerRun`: analyzer run with sanitized concrete semantics and the
+  abstract CPG finding.
+- `orderedSanitizerRun_sound`: the sanitized concrete run is covered by the
+  abstract finding set.
+- `orderedSanitizerDemoTriageComplete`: a suppressed CPG finding is complete
+  because it carries sanitizer evidence.
+
+This closes the CI loop for the CPG sanitizer slice:
+
+> Ordered sanitizer evidence can now suppress a modeled sanitized CPG false
+> positive while still satisfying `ci_gate_no_bug_hiding`.  The concrete
+> semantics is intentionally narrow; production use must prove that ordered
+> sanitizer evidence really rules out the concrete vulnerability.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -1131,8 +1156,8 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Use ordered sanitizer evidence as proof-carrying triage evidence for
-   sanitized CPG false positives.
+6. Add a wrong-context sanitizer guardrail for CPG triage, proving that a
+   sanitizer for one `SinkKind` cannot suppress a sink requiring another kind.
 7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
 8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
