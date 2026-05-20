@@ -1195,6 +1195,29 @@ This closes the adapter-level version of the extraction gap:
 > back to a source sink and location.  For multi-finding reports, every reported
 > source violation must be covered by one of these sound provenance links.
 
+`PcSastLean.SourceBackedNoOrphanCPG` specializes source-backed adapters to the
+no-orphan CPG path:
+
+- `sourceBackedNoOrphanCPGRun`: remaps a no-orphan CPG finding run into a
+  source-level run using `SourceSinkProv`.
+- `sourceBackedNoOrphanCPGRun_sound`: source/artifact sink provenance plus a
+  checked no-orphan CPG finding yields source-level analyzer soundness.
+- `sourceBackedNoOrphanCPGRun_hops_have_origins`: the source-backed run still
+  exposes the fact that every underlying CPG hop has a typed extraction origin.
+- `sourceBackedNoOrphanOrderedSanitizerRun`: the same bridge for ordered
+  sanitizer/no-orphan CPG runs.
+- `sourceBackedNoOrphanOrderedSanitizerRun_sound`: source-level soundness for
+  sanitized CPG runs built through the no-orphan adapter.
+- `sourceBackedNoOrphanOrderedSanitizerRun_hops_have_origins`: ordered
+  sanitizer runs preserve hop-origin coverage when lifted to source level.
+
+This makes provenance survive another adapter boundary:
+
+> A source-level CPG finding can now inherit two independent checks: the
+> artifact sink is tied to a source sink, and every CPG hop in the underlying
+> finding path is tied to a typed extraction origin.  Real source extraction and
+> source-map correctness remain external obligations.
+
 `PcSastLean.AssumptionLedger` records the claim boundary explicitly:
 
 - `ModeledSurface`: the surfaces currently modeled by the repository, such as
@@ -1224,41 +1247,39 @@ trusted claim is:
 > concrete modeled bug; targeted structural evidence can suppress route-shadow
 > and pointer-disjoint false positives; wrong-context sanitizer evidence is
 > rejected by the CPG triage checker; checked CPG hops can require typed
-> extraction origins before entering CPG analyzer/triage adapters; and
-> source-level CI claims require explicit extraction and provenance obligations.
-> The repository does not yet verify extraction from a production language or
-> prove general precision improvements.
+> extraction origins before entering CPG analyzer/triage adapters; source-backed
+> no-orphan CPG runs preserve that hop-origin evidence; and source-level CI
+> claims require explicit extraction and provenance obligations.  The repository
+> does not yet verify extraction from a production language or prove general
+> precision improvements.
 
 The current unverified gap is extraction from real languages into this IR.
 
 ## Next Formalization Steps
 
-1. Extend source-backed adapters from list-level source/artifact links to richer
-   extraction certificates over source spans, AST nodes, and generated-code
-   artifacts.
+1. Extend source-backed no-orphan CPG adapters from single-source provenance to
+   multi-finding source/artifact provenance lists.
 2. Extend object-sensitive keys to call strings and receiver-type sensitivity.
 3. Extend framework modeling to middleware order and transaction/query-builder
    APIs.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Lift source-backed adapters through no-orphan CPG adapters so source-level
-   reports inherit per-hop extraction-origin coverage.
-7. Prove real AST/CFG/DDG/CDG extraction algorithms discharge the checked CPG
+6. Prove real AST/CFG/DDG/CDG extraction algorithms discharge the checked CPG
    extraction-origin certificates.
-8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
+7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
-9. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
+8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
    only already-exploded `IFDSEdge`.
-10. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
+9. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
    finding certificates.
-11. Build real extractors that emit `SourceToIRSound` certificates for a target
+10. Build real extractors that emit `SourceToIRSound` certificates for a target
    language or framework.
-12. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
-13. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
-14. Split concrete execution from abstract execution so the analyzer can be less
+11. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
+12. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
+13. Split concrete execution from abstract execution so the analyzer can be less
    precise while remaining sound.
-15. Add sanitizer obligations as proof-producing predicates.
-16. Export a simple JSON certificate format from a toy scanner.
-17. Build a Lean-side parser/checker for that certificate format.
-18. Prove source-language extraction preserves the security-relevant semantics.
+14. Add sanitizer obligations as proof-producing predicates.
+15. Export a simple JSON certificate format from a toy scanner.
+16. Build a Lean-side parser/checker for that certificate format.
+17. Prove source-language extraction preserves the security-relevant semantics.

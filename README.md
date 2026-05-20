@@ -126,6 +126,9 @@ Current verified slice:
 - CPG no-orphan adapters: ordinary CPG finding runs and ordered sanitizer triage
   runs can be lifted only after every finding-path hop has checked
   extraction-origin provenance.
+- source-backed no-orphan CPG adapters: source-level CPG reports inherit both
+  source/artifact sink provenance and per-hop extraction-origin coverage from
+  the underlying no-orphan CPG run.
 - IFDS-to-CPG embedding: accepted IFDS path certificates become accepted
   CPG-style path certificates over an encoded exploded supergraph.
 - CPG edge provenance certificates, including path-specific typed provenance for

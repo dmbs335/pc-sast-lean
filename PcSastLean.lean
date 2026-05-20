@@ -45,6 +45,7 @@ import PcSastLean.PointerDisjointSuppression
 import PcSastLean.MultiAnalyzer
 import PcSastLean.CertificateAdapters
 import PcSastLean.SourceBackedAdapters
+import PcSastLean.SourceBackedNoOrphanCPG
 import PcSastLean.RichSourceProvenance
 import PcSastLean.MiniSourceBranch
 import PcSastLean.MiniSourceException
