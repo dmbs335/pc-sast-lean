@@ -19,6 +19,7 @@ import PcSastLean.IFDSCPGEmbedding
 import PcSastLean.CPGProvenance
 import PcSastLean.CPGConstruction
 import PcSastLean.CPGTraversal
+import PcSastLean.CPGNodePredicates
 import PcSastLean.Feasibility
 import PcSastLean.SMTCore
 import PcSastLean.SMTResolution

@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal-template certificates | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, and node-predicate certificates | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -602,8 +602,35 @@ This covers the second half of the CPG idea in miniature:
 
 > Findings can now be checked as matches of a vulnerability traversal template,
 > not merely as arbitrary source-to-sink paths.  The template language is still
-> tiny: it has source/sink id sets and edge-kind filters, but no node-property
-> predicates, joins, repetition, negation, or graph database semantics.
+> tiny: it has source/sink id sets and edge-kind filters, but no joins,
+> repetition, negation, or graph database semantics.
+
+`PcSastLean.CPGNodePredicates` adds node-property checks to traversal templates:
+
+- `CPGNodeFact`: external property facts for call names, argument indices,
+  source classes, and sink classes.
+- `CPGNodePredicate`: query predicates over node kind and checked node facts.
+- `checkCPGNodePredicate_sound`: accepted node-predicate checks imply the
+  trusted predicate semantics.
+- `cpgHopNodePredicatesHold`: semantic relation between hop destination nodes
+  and predicate sequences.
+- `checkCPGHopNodePredicates_sound`: accepted hop-node predicate checks imply
+  the semantic relation.
+- `CPGNodeQuery`: a traversal template plus source, sink, and hop-destination
+  node predicates.
+- `CPGNodeTraversalMatch`: a traversal match with both edge-kind filters and
+  checked node predicates.
+- `checked_cpg_node_traversal_match_sound`: accepted node-predicate traversal
+  certificates imply `CPGNodeTraversalMatch`.
+- `checked_cpg_node_traversal_finding_sound`: accepted node-predicate traversal
+  certificates still imply ordinary `CPGFinding`.
+
+This connects CPG traversal templates to more realistic SAST query structure:
+
+> A finding can require both a path shape and endpoint/intermediate node facts,
+> such as source classification, sink classification, call name, node kind, or
+> argument index.  Those facts are still external metadata until a production CPG
+> builder proves they were extracted correctly.
 
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
@@ -1019,8 +1046,8 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Add CPG node-property predicates for call names, argument positions, source
-   classifications, and sink classifications.
+6. Add source/sink policy provenance for CPG node facts, so source and sink
+   classes are backed by checked policy rules.
 7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
 8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
