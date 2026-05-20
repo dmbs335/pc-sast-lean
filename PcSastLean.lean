@@ -17,6 +17,7 @@ import PcSastLean.IFDSDistributive
 import PcSastLean.CPG
 import PcSastLean.IFDSCPGEmbedding
 import PcSastLean.CPGProvenance
+import PcSastLean.CPGConstruction
 import PcSastLean.Feasibility
 import PcSastLean.SMTCore
 import PcSastLean.SMTResolution

@@ -22,7 +22,8 @@ Current scope and non-claims:
 - Object sensitivity currently proves projection from abstract context keys to
   allocation-site abstraction; it does not yet encode real call-string-k or
   receiver-type sensitivity.
-- CPG provenance includes typed path-hop certificates, but real AST/CFG/DDG/CDG
+- CPG construction now includes a small verified component-edge merge from
+  AST/CFG/PDG-style edges into typed CPG edges, but real AST/CFG/DDG/CDG
   extraction rules are still future work.
 - The main result is soundness/no-bug-hiding under stated obligations.  Precision
   and false-positive reduction are not general proved properties, though there
@@ -40,7 +41,7 @@ Claim boundary:
 | Mini source callbacks | Verified | Optional concrete callback execution is covered by abstract execution that includes the callback path | Event-loop ordering, async/await, promise chains, reentrancy |
 | Rich source provenance | Conditional | Source spans, AST node ids, generated-code origins, and mini extractor-generated provenance lists erase safely to source-backed adapter proofs | Correct real source maps, parser spans, macro/template expansion provenance |
 | Offset pointer arithmetic | Conditional toy model | Base+offset pointer add/read/write preserve may-alias soundness | C/C++ pointer provenance, byte layout, UB, unsafe casts, negative offsets |
-| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts; sparse IFDS fact-flow relations lower to exploded graph paths | That a real extractor built the graph correctly |
+| IFDS/CPG certificates | Verified/conditional | Accepted path/fixpoint/summary certificates imply trusted graph facts; sparse IFDS fact-flow relations lower to exploded graph paths; component CPG edges merge into typed CPG paths | That a real extractor built the graph correctly |
 | CI no-bug-hiding | Conditional | Sound analyzer run plus complete proof-carrying triage cannot hide modeled bugs | Source-level safety without extraction/provenance |
 | Production source extraction | External obligation | Transfer theorems once `SourceToIRSound` is supplied | Full real-language semantics and parser/source-map correctness |
 | SMT feasibility | Conditional toy model | Boolean contradiction cores and propositional implication-chain resolution | LRA, EUF, strings, arrays, regex theory proofs |
@@ -101,6 +102,9 @@ Current verified slice:
   over set-union membership and compile to ordinary exploded-supergraph paths.
 - CPG/CodeQL-style source-to-sink graph path certificates over typed AST/CFG/DDG
   style edges with source-location provenance.
+- CPG component construction: AST, CFG, data/control dependence, call, and
+  return component edges lower into one typed CPG, and component paths lift to
+  ordinary CPG paths.
 - IFDS-to-CPG embedding: accepted IFDS path certificates become accepted
   CPG-style path certificates over an encoded exploded supergraph.
 - CPG edge provenance certificates, including path-specific typed provenance for

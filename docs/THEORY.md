@@ -75,8 +75,9 @@ The phrase "verified slice" is intentionally narrow in this repository.
 - Framework modeling is a toy may-route and guard-chain model.  Path templates,
   regex routing, content negotiation, middleware order, exception handlers, and
   transaction/query-builder APIs are outside the modeled semantics.
-- CPG provenance has typed path-hop certificates and toy data-flow provenance,
-  but production AST/CFG/DDG/CDG extraction rules are still missing.
+- CPG construction now has a small component-edge merge theorem from
+  AST/CFG/PDG-style edges into typed CPG paths, but production
+  AST/CFG/DDG/CDG extraction rules are still missing.
 - Many `checked_X_sound` lemmas are intentionally checker-shape lemmas: Boolean
   certificate acceptance unfolds to the corresponding trusted proposition.  The
   more substantive theorems are the no-bug-hiding triage theorem, extraction
@@ -102,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding | Real AST/CFG/DDG/CDG extraction provenance is incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths | Real AST/CFG/DDG/CDG extraction provenance is incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -553,6 +554,30 @@ This separates two CPG claims:
 > Edge provenance soundness: each path hop came from a justified source-level or
 > structural fact, and the provenance reason matches the CPG edge kind.
 
+`PcSastLean.CPGConstruction` adds a small construction bridge for the
+Yamaguchi-style CPG merge:
+
+- `CPGComponentKind`: component edge kinds for AST, CFG, data dependence,
+  control dependence, call, and return.
+- `CPGComponentEdge.toCPGEdge`: lowers component edges into typed CPG edges.
+- `mergeComponentEdges`: merges component edges into one CPG edge list.
+- `component_edge_mem_merge`: every component edge appears in the merged graph.
+- `componentPath`: paths over component graph edges.
+- `componentPath_to_CPGPath`: component paths lift to ordinary CPG paths over
+  the merged graph.
+- `cpg_component_path_cert_sound`: a component-path certificate implies CPG
+  reachability after merging.
+- `component_path_hops_have_provenance`: each component path hop has preserved
+  construction provenance.
+
+This narrows the CPG gap:
+
+> CPG is no longer only an assumed typed graph.  The verified slice now models a
+> small merge from AST/CFG/PDG-style components into one CPG and proves path
+> preservation across that merge.  What remains external is proving that those
+> component edges correctly reflect real source syntax, control flow, and
+> dependencies.
+
 `PcSastLean.Feasibility` adds path-feasibility obligations:
 
 - `BoolExpr`: a tiny symbolic Boolean language for path conditions.
@@ -967,21 +992,23 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
+6. Add a tiny CPG traversal/query-template language with edge-kind filters and
+   prove accepted traversal certificates correspond to CPG paths.
+7. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
    rules.
-7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
+8. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
-8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
+9. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not
    only already-exploded `IFDSEdge`.
-9. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
+10. Add IFDS summary-edge fixpoint/no-reach certificates, not only compressed
    finding certificates.
-10. Build real extractors that emit `SourceToIRSound` certificates for a target
+11. Build real extractors that emit `SourceToIRSound` certificates for a target
    language or framework.
-11. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
-12. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
-13. Split concrete execution from abstract execution so the analyzer can be less
+12. Add real feasibility witnesses from SMT, runtime traces, or fuzzer witnesses.
+13. Lift `SanitizerLattice` labels into the heap and procedure-summary modules.
+14. Split concrete execution from abstract execution so the analyzer can be less
    precise while remaining sound.
-14. Add sanitizer obligations as proof-producing predicates.
-15. Export a simple JSON certificate format from a toy scanner.
-16. Build a Lean-side parser/checker for that certificate format.
-17. Prove source-language extraction preserves the security-relevant semantics.
+15. Add sanitizer obligations as proof-producing predicates.
+16. Export a simple JSON certificate format from a toy scanner.
+17. Build a Lean-side parser/checker for that certificate format.
+18. Prove source-language extraction preserves the security-relevant semantics.
