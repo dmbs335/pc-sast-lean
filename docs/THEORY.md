@@ -103,7 +103,7 @@ The phrase "verified slice" is intentionally narrow in this repository.
 | Offset pointer arithmetic | Conditional toy model | `offset_ptr_add_sound`, `readAbsPtr_sound`, `offset_writeMayPtr_sound`, `offset_load_sound` | No C/C++ pointer provenance, byte layout, UB, unsafe casts, or negative offsets |
 | Sanitizers/templates/ORM | Verified inside model | context-indexed sanitizer capabilities, template slots, prepared-parameter rules | Parser-state completeness and framework APIs are not modeled |
 | IFDS certificates | Verified/conditional | path, fixpoint, compressed summary cert soundness; sparse finite-distributive flow relations lower to exploded graph paths | Solver implementation is untrusted; real transfer-function extraction remains external |
-| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, sanitizer-backed proof-carrying triage, and wrong-context sanitizer rejection | Real AST/CFG/DDG/CDG extraction provenance and production query-language compilation are incomplete |
+| CPG certificates | Conditional | typed path certs, path-specific edge provenance, IFDS-to-CPG embedding, component-edge merge into CPG paths, checked extraction-origin witnesses for CPG hops, traversal templates, node-predicate certificates, source/sink policy provenance, sanitizer-policy evidence tied to `SanitizerLattice`, ordered value-flow sanitizer evidence, sanitizer-backed proof-carrying triage, and wrong-context sanitizer rejection | Real AST/CFG/DDG/CDG extraction algorithms and production query-language compilation are incomplete |
 | Suppression/no-bug-hiding | Conditional theorem | proof-carrying suppression and CI no-bug-hiding | Requires analyzer soundness and complete triage evidence |
 | Source extraction | External obligation | `SourceToIRSound` transfer gates | No real-language extractor yet |
 | SMT feasibility | Conditional toy checker | contradictory Boolean pivot, unsat-core witness, and implication-chain resolution | No LRA/EUF/string/array/theory proof checker yet |
@@ -577,6 +577,35 @@ This narrows the CPG gap:
 > preservation across that merge.  What remains external is proving that those
 > component edges correctly reflect real source syntax, control flow, and
 > dependencies.
+
+`PcSastLean.CPGExtractionProvenance` adds typed extraction-origin witnesses for
+component edges:
+
+- `CPGExtractionOrigin`: AST child, CFG step, DDG reaching definition, CDG
+  control dependence, call link, and return link origins.
+- `CPGExtractionOrigin.toComponentEdge`: lowers each origin into the component
+  edge it claims to justify.
+- `CPGExtractedEdgeCert.Sound`: an extracted edge certificate is sound when its
+  component edge exactly matches its origin.
+- `checkCPGExtractedEdgeCert_sound`: accepted extracted-edge certificates imply
+  the trusted soundness relation.
+- `extracted_edge_kind_forced_by_origin`: the component edge kind is forced by
+  the origin class.
+- `checkExtractedHops_sound`: a checked hop list is covered by extraction
+  certificates.
+- `extracted_hop_has_origin_edge`: every certified hop has an origin whose
+  lowered component/CPG edge equals the hop.
+- `checked_cpg_finding_with_extraction_provenance_sound`: an accepted CPG
+  finding plus checked per-hop extraction provenance yields both the CPG finding
+  and origin-backed evidence for every hop.
+
+This reduces one CPG trust-boundary risk:
+
+> A finding path cannot silently use an orphan edge if the checker is run with
+> extraction-origin certificates.  The remaining external burden is stronger and
+> more precise: prove that each origin fact is correct for the real parser,
+> control-flow construction, dependence analysis, call graph, and return-flow
+> model.
 
 `PcSastLean.CPGTraversal` adds a tiny vulnerability-template layer over CPG
 paths:
@@ -1163,10 +1192,10 @@ trusted claim is:
 > corresponding concrete toy executions; proof-carrying triage cannot hide a
 > concrete modeled bug; targeted structural evidence can suppress route-shadow
 > and pointer-disjoint false positives; wrong-context sanitizer evidence is
-> rejected by the CPG triage checker; and source-level CI claims require
-> explicit extraction and provenance obligations.  The repository does not yet
-> verify extraction from a production language or prove general precision
-> improvements.
+> rejected by the CPG triage checker; checked CPG hops can require typed
+> extraction origins; and source-level CI claims require explicit extraction and
+> provenance obligations.  The repository does not yet verify extraction from a
+> production language or prove general precision improvements.
 
 The current unverified gap is extraction from real languages into this IR.
 
@@ -1181,8 +1210,8 @@ The current unverified gap is extraction from real languages into this IR.
 4. Refine template contexts for nested HTML/JS/CSS/URL parser states.
 5. Replace the toy contradictory-pivot core with richer SMT proof certificates
    for equalities, arithmetic, strings, and theory lemmas.
-6. Extend CPG provenance from toy data edges to real AST/CFG/DDG/CDG extraction
-   rules.
+6. Prove real AST/CFG/DDG/CDG extraction algorithms discharge the checked CPG
+   extraction-origin certificates.
 7. Refine pointer-disjoint suppression with byte ranges, object bounds, and
    provenance-aware no-overlap certificates.
 8. Add relational IFDS fixpoint/no-reach certificates over `IFDSFlowEdge`, not

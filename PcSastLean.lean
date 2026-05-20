@@ -19,6 +19,7 @@ import PcSastLean.IFDSCPGEmbedding
 import PcSastLean.CPGProvenance
 import PcSastLean.CPGConstruction
 import PcSastLean.CPGTraversal
+import PcSastLean.CPGExtractionProvenance
 import PcSastLean.CPGNodePredicates
 import PcSastLean.CPGPolicyProvenance
 import PcSastLean.CPGSanitizerPolicy

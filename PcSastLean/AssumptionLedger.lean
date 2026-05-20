@@ -33,6 +33,7 @@ inductive ModeledSurface where
   | ifdsDistributiveFlows
   | cpgCertificates
   | cpgComponentMerge
+  | cpgExtractionProvenance
   | cpgTraversalTemplates
   | cpgNodePredicates
   | cpgPolicyProvenance
@@ -74,6 +75,7 @@ inductive ModuleName where
   | ifdsSummary
   | cpg
   | cpgConstruction
+  | cpgExtractionProvenance
   | cpgTraversal
   | cpgNodePredicates
   | cpgPolicyProvenance
@@ -134,6 +136,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.ifdsDistributiveFlows
       , ModeledSurface.cpgCertificates
       , ModeledSurface.cpgComponentMerge
+      , ModeledSurface.cpgExtractionProvenance
       , ModeledSurface.cpgTraversalTemplates
       , ModeledSurface.cpgNodePredicates
       , ModeledSurface.cpgPolicyProvenance
@@ -231,6 +234,13 @@ def moduleClaimLedger : List ModuleClaim :=
     , modeled := [ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge]
     , obligations := [ExternalObligation.cpgExtractionProvenance]
     }
+  , { module := ModuleName.cpgExtractionProvenance
+    , status := ClaimStatus.conditional
+    , modeled :=
+        [ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge,
+          ModeledSurface.cpgExtractionProvenance]
+    , obligations := [ExternalObligation.cpgExtractionProvenance]
+    }
   , { module := ModuleName.cpgTraversal
     , status := ClaimStatus.conditional
     , modeled := [ModeledSurface.cpgCertificates, ModeledSurface.cpgTraversalTemplates]
@@ -294,7 +304,7 @@ def moduleClaimLedger : List ModuleClaim :=
     }
   , { module := ModuleName.cpgProvenance
     , status := ClaimStatus.conditional
-    , modeled := [ModeledSurface.cpgCertificates]
+    , modeled := [ModeledSurface.cpgCertificates, ModeledSurface.cpgExtractionProvenance]
     , obligations := [ExternalObligation.cpgExtractionProvenance]
     }
   , { module := ModuleName.smtCore
