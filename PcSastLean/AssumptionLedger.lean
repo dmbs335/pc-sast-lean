@@ -1,4 +1,4 @@
-import PcSastLean.SourceBackedNoOrphanCPG
+import PcSastLean.MultiSourceBackedNoOrphanCPG
 
 /-!
 Assumption ledger.
@@ -21,6 +21,7 @@ inductive ModeledSurface where
   | miniSourceCallbacks
   | richSourceProvenance
   | sourceBackedNoOrphanCPG
+  | multiSourceBackedNoOrphanCPG
   | branchJoin
   | procedureSummaries
   | heapMayAlias
@@ -73,6 +74,7 @@ inductive ModuleName where
   | miniSourceCallback
   | richSourceProvenance
   | sourceBackedNoOrphanCPG
+  | multiSourceBackedNoOrphanCPG
   | ifds
   | ifdsDistributive
   | ifdsSummary
@@ -137,6 +139,7 @@ def currentSliceBoundary : VerifiedSliceBoundary :=
       , ModeledSurface.pointerDisjointSuppression
       , ModeledSurface.sanitizerCapabilities
       , ModeledSurface.sourceBackedNoOrphanCPG
+      , ModeledSurface.multiSourceBackedNoOrphanCPG
       , ModeledSurface.ifdsCertificates
       , ModeledSurface.ifdsDistributiveFlows
       , ModeledSurface.cpgCertificates
@@ -220,6 +223,19 @@ def moduleClaimLedger : List ModuleClaim :=
     , modeled :=
         [ModeledSurface.richSourceProvenance,
           ModeledSurface.sourceBackedNoOrphanCPG,
+          ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge,
+          ModeledSurface.cpgExtractionProvenance,
+          ModeledSurface.cpgNoOrphanAdapter]
+    , obligations :=
+        [ExternalObligation.realLanguageExtraction,
+          ExternalObligation.cpgExtractionProvenance]
+    }
+  , { module := ModuleName.multiSourceBackedNoOrphanCPG
+    , status := ClaimStatus.conditional
+    , modeled :=
+        [ModeledSurface.richSourceProvenance,
+          ModeledSurface.sourceBackedNoOrphanCPG,
+          ModeledSurface.multiSourceBackedNoOrphanCPG,
           ModeledSurface.cpgCertificates, ModeledSurface.cpgComponentMerge,
           ModeledSurface.cpgExtractionProvenance,
           ModeledSurface.cpgNoOrphanAdapter]

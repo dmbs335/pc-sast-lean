@@ -46,6 +46,7 @@ import PcSastLean.MultiAnalyzer
 import PcSastLean.CertificateAdapters
 import PcSastLean.SourceBackedAdapters
 import PcSastLean.SourceBackedNoOrphanCPG
+import PcSastLean.MultiSourceBackedNoOrphanCPG
 import PcSastLean.RichSourceProvenance
 import PcSastLean.MiniSourceBranch
 import PcSastLean.MiniSourceException

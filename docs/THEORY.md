@@ -1218,6 +1218,31 @@ This makes provenance survive another adapter boundary:
 > finding path is tied to a typed extraction origin.  Real source extraction and
 > source-map correctness remain external obligations.
 
+`PcSastLean.MultiSourceBackedNoOrphanCPG` lifts that bridge to multi-finding CPG
+reports:
+
+- `SourceBackedNoOrphanCPGEntry`: pairs a no-orphan CPG finding certificate with
+  a source/artifact sink provenance link.
+- `sourceBackedNoOrphanCPGEntryRuns`: builds the artifact-level CPG run list for
+  a list of entries.
+- `sourceBackedNoOrphanCPGEntryProvs`: collects the source/artifact provenance
+  links from those entries.
+- `checkSourceBackedNoOrphanCPGEntries_sound`: accepted batch checking means
+  every entry's no-orphan CPG finding checker accepted.
+- `sourceBackedNoOrphanCPGEntryRuns_sound`: every checked entry run is sound.
+- `aggregateSourceBackedNoOrphanCPGEntries_sound`: the aggregate artifact CPG
+  run is sound.
+- `sourceBackedNoOrphanCPGBatchRun_sound`: if source/artifact provenance covers
+  the source findings, the aggregate source-level report is sound.
+- `sourceBackedNoOrphanCPGEntries_hops_have_origins`: every checked entry keeps
+  per-hop extraction-origin coverage.
+
+This is the multi-finding source-level version of the no-orphan discipline:
+
+> A batch CPG report can be lifted to source level while retaining two
+> invariants for every entry: the source sink maps to an artifact sink, and the
+> artifact CPG path has no orphan hops.
+
 `PcSastLean.AssumptionLedger` records the claim boundary explicitly:
 
 - `ModeledSurface`: the surfaces currently modeled by the repository, such as
@@ -1248,17 +1273,17 @@ trusted claim is:
 > and pointer-disjoint false positives; wrong-context sanitizer evidence is
 > rejected by the CPG triage checker; checked CPG hops can require typed
 > extraction origins before entering CPG analyzer/triage adapters; source-backed
-> no-orphan CPG runs preserve that hop-origin evidence; and source-level CI
-> claims require explicit extraction and provenance obligations.  The repository
-> does not yet verify extraction from a production language or prove general
-> precision improvements.
+> no-orphan CPG runs, including multi-finding reports, preserve that hop-origin
+> evidence; and source-level CI claims require explicit extraction and
+> provenance obligations.  The repository does not yet verify extraction from a
+> production language or prove general precision improvements.
 
 The current unverified gap is extraction from real languages into this IR.
 
 ## Next Formalization Steps
 
-1. Extend source-backed no-orphan CPG adapters from single-source provenance to
-   multi-finding source/artifact provenance lists.
+1. Connect multi-finding source-backed no-orphan CPG reports to the top-level
+   CI triage/no-bug-hiding theorem.
 2. Extend object-sensitive keys to call strings and receiver-type sensitivity.
 3. Extend framework modeling to middleware order and transaction/query-builder
    APIs.
